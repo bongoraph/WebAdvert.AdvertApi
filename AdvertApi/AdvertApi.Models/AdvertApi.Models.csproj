@@ -2,6 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
+    <Authors>R.B</Authors>
+    <Company>None</Company>
+    <Product>Web Advert MicroServices</Product>
+    <RepositoryUrl>https://github.com/bongoraph/WebAdvert.AdvertApi</RepositoryUrl>
+    <PackageId>RBAdvertApi.Models</PackageId>
+    <Version>1.1.0</Version>
   </PropertyGroup>
 
 </Project>

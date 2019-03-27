@@ -22,7 +22,8 @@ namespace AdvertApi.Services
         {
             var dbModel = _mapper.Map<AdvertDbModel>(model);
 
-            dbModel.Id = new Guid().ToString();
+            dbModel.Id = Guid.NewGuid().ToString();
+
             dbModel.CreationDateTime = DateTime.UtcNow;
             dbModel.Status = AdvertStatus.Pending;
 
@@ -35,6 +36,24 @@ namespace AdvertApi.Services
             }
 
             return dbModel.Id;
+        }
+
+        public async Task<bool> CheckHealthAsync()
+        {
+            Console.WriteLine("Health checking...");
+            try
+            {
+                using (var client = new AmazonDynamoDBClient())
+                {
+                    var tableData = await client.DescribeTableAsync("Adverts");
+                    return string.Compare(tableData.Table.TableStatus, "active", true) == 0;
+                }
+            }
+            catch(Exception ex)
+            {
+
+            }
+            return true;
         }
 
         public async Task ConfirmAsync(ConfirmAdvertModel model)
@@ -57,6 +76,33 @@ namespace AdvertApi.Services
                     }
                 }
             }
+        }
+
+        public async Task<List<AdvertModel>> GetAllAsync()
+        {
+            using (var client = new AmazonDynamoDBClient())
+            {
+                using (var context = new DynamoDBContext(client))
+                {
+                    var scanResult =
+                        await context.ScanAsync<AdvertDbModel>(new List<ScanCondition>()).GetNextSetAsync();
+                    return scanResult.Select(item => _mapper.Map<AdvertModel>(item)).ToList();
+                }
+            }
+        }
+
+        public async Task<AdvertModel> GetByIdAsync(string id)
+        {
+            using (var client = new AmazonDynamoDBClient())
+            {
+                using (var context = new DynamoDBContext(client))
+                {
+                    var dbModel = await context.LoadAsync<AdvertDbModel>(id);
+                    if (dbModel != null) return _mapper.Map<AdvertModel>(dbModel);
+                }
+            }
+
+            throw new KeyNotFoundException();
         }
     }
 }
